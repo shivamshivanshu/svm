@@ -1,5 +1,5 @@
 #include "single_core.hpp"
-#include "instructions.hpp"
+#include "arch.hpp"
 #include "memory.hpp"
 
 #include <iostream>
@@ -7,13 +7,12 @@ using namespace std;
 using namespace svm;
 int main()
 {
-    auto ptr = make_shared<Memory<uint16_t, 1024>>();
+    auto ptr = make_shared<Memory>();
     SingleCore cpu(ptr);
-    cpu.MOV_ri(Regs::AX, 6);
-    cout << static_cast<int>(cpu.readRegister(Regs::AX)) << std::endl;
-    cpu.MOV_ri(Regs::BX, 2);
-    cout << static_cast<int>(cpu.readRegister(Regs::BX)) << std::endl;
-    cpu.AND_rr(Regs::AX, Regs::BX);
-    cout << static_cast<int>(cpu.readRegister(Regs::AX)) << std::endl;
+    cpu.MOV_ri(Regs::AX, 0x0001);
+    cpu.MOV_ri(Regs::BX, 0x0001);
+
+    cpu.XOR_rr(Regs::AX, Regs::BX);
+    cout << cpu.readRegister(Regs::AX) << endl;
     return 0;
 }

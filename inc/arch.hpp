@@ -1,24 +1,33 @@
 #pragma once
 #include <cstdint>
+#include <utility>
 #include <map>
-#include <string>
 
 namespace svm
 {
+    // Registers
     enum class Regs
     {
         AX, BX, CX, DX, CS, DS, SS, ES, SP, BP, SI, DI, IP, FLAG
     };
 
+    // Basic Types
     using Register = uint16_t;
-    using Immediate = uint16_t;
+    using T = uint16_t;
     using RegisterHalf = uint8_t;
+    using Immediate = uint16_t;
+    using MemoryAddress = uint32_t;
+
+    // Compount Types
     using RegisterType = std::pair<RegisterHalf, RegisterHalf>;
     using Operand = std::pair<Regs, Regs>;
     using Registers = std::map<Regs, RegisterType>;
-    const std::size_t RegisterHalfSize = 8U;
-    const Register upperHalfMask = 0xFF00U, lowerHalfMask = 0x00FFU;
 
+    // Compile Time Constant
+    constexpr const std::size_t RegisterHalfSize = 8U, N = 1024U;
+    constexpr const Register upperHalfMask = 0xFF00U, lowerHalfMask = 0x00FFU;
+
+    // CPU Instruction Set
     enum class Inst
     {
         AAA,    // ASCII Adjust after Addition. Corrects result in AH and AL after addition when working with BCD values
@@ -138,6 +147,5 @@ namespace svm
         XLATB,  // Translate byte from table. Copy value of memory byte at DS:[BX + unsigned AL] to AL register.
         XOR,    // Logical XOR (Exclusive OR) between all bits of two operands. Result is stored in first operand.
     };
-    using Instruction = std::pair<Inst, Operand>;
 
-} // namespace svm
+} // namespace smv
