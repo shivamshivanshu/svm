@@ -9,10 +9,9 @@ int main()
 {
     auto ptr = make_shared<Memory>();
     SingleCore cpu(ptr);
-    cpu.MOV_ri(Regs::AX, 0x0001);
-    cpu.MOV_ri(Regs::BX, 0x0001);
-
-    cpu.XOR_rr(Regs::AX, Regs::BX);
+    cpu.mem->write(0, 5);
+    cpu.POP_r(Regs::AX);
     cout << cpu.readRegister(Regs::AX) << endl;
+    cout << cpu.readRegister(Regs::SP) << endl;
     return 0;
 }

@@ -24,6 +24,8 @@ namespace svm
         void parseInstruction() noexcept;
         [[nodiscard]] Register readRegister(Regs) noexcept;
         void writeRegister(Regs, Immediate) noexcept;
+        Register setupFlags(Register, Register, uint32_t) noexcept;
+        bool calculateParity(Register)  noexcept;
 
         // Instruction set
 
@@ -53,7 +55,8 @@ namespace svm
         void CMPSW(Operand &op);
         void CWD(Operand &op);
         // DEC
-        Trap DEC() noexcept;
+        Trap DEC_m(MemoryAddress) noexcept;
+        Trap DEC_r(Regs) noexcept;
         void DIV(Operand &op);
         // HLT
         Trap HLT() noexcept;
@@ -61,7 +64,8 @@ namespace svm
         void IMUL(Operand &op);
         void IN(Operand &op);
         // INC
-        Trap INC() noexcept;
+        Trap INC_m(MemoryAddress) noexcept;
+        Trap INC_r(Regs) noexcept;
         // INT
         Trap INT(Immediate);
         void INTO(Operand &op);

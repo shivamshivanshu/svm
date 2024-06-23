@@ -52,6 +52,7 @@ namespace svm
     // Compile Time Constant
     constexpr const std::size_t RegisterHalfSize = 8U, N = 1024U;
     constexpr const Register upperHalfMask = 0xFF00U, lowerHalfMask = 0x00FFU;
+    constexpr const Register maxRegisterValue = upperHalfMask | lowerHalfMask, signBitMask = 0x8000U;
 
     // CPU Instruction Set
     enum class Inst

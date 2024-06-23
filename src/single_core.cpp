@@ -48,4 +48,47 @@ namespace svm
         reg[r].second = static_cast<RegisterHalf>(value & lowerHalfMask);
     }
 
+    bool SingleCore::calculateParity(Register value) noexcept
+    {
+        std::size_t bitlen = sizeof(Register) * 8U, cnt = 0;
+        for(std::size_t i{0}; i < bitlen; ++i)
+        {
+            if(value & (1U << i))
+            {
+                cnt++;
+            }
+        }
+        return cnt % 2 == 0;
+    }
+    
+    Register SingleCore::setupFlags(Register source, Register destination, uint32_t result) noexcept
+    {
+        Register flag = 0;
+        if(result > maxRegisterValue) 
+        {
+            flag |= static_cast<Register>(1U) << static_cast<uint32_t>(Flags::CF);
+        }
+        if((result & maxRegisterValue) == 0) 
+        {
+            flag |= static_cast<Register>(1U) << static_cast<uint32_t>(Flags::ZF);
+        }
+        if((result & signBitMask) != 0)
+        {
+            flag |= static_cast<Register>(1U) << static_cast<uint32_t>(Flags::SF);
+        }
+        if(((destination ^ result) & (source ^ result) & signBitMask) != 0)
+        {
+            flag |= static_cast<Register>(1U) << static_cast<uint32_t>(Flags::OF);
+        }
+        if(((destination ^ source ^ result) & 0x10) != 0)
+        {
+            flag |= static_cast<Register>(1U) << static_cast<uint32_t>(Flags::AF);
+        }
+        if(calculateParity((result & maxRegisterValue)))
+        {
+            flag |= static_cast<Register>(1U) << static_cast<uint32_t>(Flags::PF);
+        }
+        return flag;
+    }
+
 } // namespace svm
