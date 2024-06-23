@@ -8,6 +8,7 @@ namespace svm
         ILLEGAL,
         SEG_FAULT,
         MEM_FAULT,
+        HALT,
     };
 
 } // namespace svm

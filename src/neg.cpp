@@ -2,7 +2,7 @@
 
 namespace svm
 {
-    Trap SingleCore::NEG_r(Regs first)
+    Trap SingleCore::NEG_r(Regs first) noexcept
     {
         auto lvalue = readRegister(first);
         lvalue = ~lvalue;
@@ -10,16 +10,16 @@ namespace svm
         return Trap::OK;
     }
 
-    Trap SingleCore::NEG_m(MemoryAddress addr)
+    Trap SingleCore::NEG_m(MemoryAddress addr) noexcept
     {
         auto [trap, lvalue] = mem->read(addr);
-        if(trap == Trap::OK)
+        if (trap == Trap::OK)
         {
             lvalue = ~lvalue;
             trap = mem->write(addr, lvalue);
             return trap;
         }
-        else 
+        else
         {
             return trap;
         }

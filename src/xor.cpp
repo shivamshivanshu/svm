@@ -2,7 +2,7 @@
 
 namespace svm
 {
-    Trap SingleCore::XOR_rr(Regs first, Regs second)
+    Trap SingleCore::XOR_rr(Regs first, Regs second) noexcept
     {
         std::pair<RegisterHalf, RegisterHalf> &valFirst = reg[first], &valSecond = reg[second];
         valFirst.first ^= valSecond.first;
@@ -10,7 +10,7 @@ namespace svm
         return Trap::OK;
     }
 
-    Trap SingleCore::XOR_mr(MemoryAddress addr, Regs second)
+    Trap SingleCore::XOR_mr(MemoryAddress addr, Regs second) noexcept
     {
         auto [trap, lvalue] = mem->read(addr);
         T rvalue = readRegister(second);
@@ -26,7 +26,7 @@ namespace svm
         }
     }
 
-    Trap SingleCore::XOR_rm(Regs first, MemoryAddress addr)
+    Trap SingleCore::XOR_rm(Regs first, MemoryAddress addr) noexcept
     {
         auto regValue = readRegister(first);
         auto [trap, rvalue] = mem->read(addr);
@@ -41,14 +41,14 @@ namespace svm
             return trap;
         }
     }
-    Trap SingleCore::XOR_ri(Regs first, Immediate value)
+    Trap SingleCore::XOR_ri(Regs first, Immediate value) noexcept
     {
         auto regValue = readRegister(first);
         regValue ^= value;
         writeRegister(first, regValue);
         return Trap::OK;
     }
-    Trap SingleCore::XOR_mi(MemoryAddress addr, Immediate value)
+    Trap SingleCore::XOR_mi(MemoryAddress addr, Immediate value) noexcept
     {
         auto [trap, lvalue] = mem->read(addr);
         if (trap == Trap::OK)

@@ -8,7 +8,33 @@ namespace svm
     // Registers
     enum class Regs
     {
-        AX, BX, CX, DX, CS, DS, SS, ES, SP, BP, SI, DI, IP, FLAG
+        AX,
+        BX,
+        CX,
+        DX,
+        CS,
+        DS,
+        SS,
+        ES,
+        SP,
+        BP,
+        SI,
+        DI,
+        IP,
+        FLAG
+    };
+
+    enum class Flags
+    {
+        CF = 0,
+        PF = 2,
+        AF = 4,
+        ZF = 6,
+        SF = 7,
+        TF = 8,
+        IF = 9,
+        DF = 10,
+        OF = 11
     };
 
     // Basic Types
