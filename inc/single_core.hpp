@@ -11,7 +11,7 @@ struct SingleCore
 {
 
     // Constructors
-    ~SingleCore() = delete;
+    ~SingleCore() = default;
     SingleCore(const SingleCore &) = delete;
     SingleCore(SingleCore &&) = delete;
     SingleCore &operator=(const SingleCore &) = delete;
@@ -24,20 +24,20 @@ struct SingleCore
     Trap AAM(void) noexcept;
     Trap AAS(void) noexcept;
 
-    Trap ADC(arch::Register, arch::Register) noexcept;
-    Trap ADC(arch::Register, arch::MemoryAddress) noexcept;
-    Trap ADC(arch::Register, arch::Immediate) noexcept;
+    Trap ADC(arch::Regs, arch::Regs) noexcept;
+    Trap ADC(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap ADC(arch::Regs, arch::Immediate) noexcept;
     Trap ADC(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap ADC(arch::MemoryAddress, arch::Register) noexcept;
+    Trap ADC(arch::MemoryAddress, arch::Regs) noexcept;
 
-    Trap AND(arch::Register, arch::Register) noexcept;
-    Trap AND(arch::Register, arch::MemoryAddress) noexcept;
-    Trap AND(arch::Register, arch::Immediate) noexcept;
+    Trap AND(arch::Regs, arch::Regs) noexcept;
+    Trap AND(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap AND(arch::Regs, arch::Immediate) noexcept;
     Trap AND(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap AND(arch::MemoryAddress, arch::Register) noexcept;
+    Trap AND(arch::MemoryAddress, arch::Regs) noexcept;
 
     Trap CALL(arch::MemoryAddress) noexcept;
-    Trap CALL(arch::Register) noexcept;
+    Trap CALL(arch::Regs) noexcept;
 
     Trap CBW(void) noexcept;
 
@@ -47,11 +47,11 @@ struct SingleCore
 
     Trap CMC(void) noexcept;
 
-    Trap CMP(arch::Register, arch::Register) noexcept;
-    Trap CMP(arch::Register, arch::MemoryAddress) noexcept;
-    Trap CMP(arch::Register, arch::Immediate) noexcept;
+    Trap CMP(arch::Regs, arch::Regs) noexcept;
+    Trap CMP(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap CMP(arch::Regs, arch::Immediate) noexcept;
     Trap CMP(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap CMP(arch::MemoryAddress, arch::Register) noexcept;
+    Trap CMP(arch::MemoryAddress, arch::Regs) noexcept;
 
     Trap CMPSB(void) noexcept;
     Trap CMPSW(void) noexcept;
@@ -60,24 +60,24 @@ struct SingleCore
     Trap DAA(void) noexcept;
     Trap DAS(void) noexcept;
 
-    Trap DEC(arch::Register) noexcept;
+    Trap DEC(arch::Regs) noexcept;
     Trap DEC(arch::MemoryAddress) noexcept;
 
-    Trap DIV(arch::Register) noexcept;
+    Trap DIV(arch::Regs) noexcept;
     Trap DIV(arch::MemoryAddress) noexcept;
 
     Trap HLT(void) noexcept;
 
-    Trap IDIV(arch::Register) noexcept;
+    Trap IDIV(arch::Regs) noexcept;
     Trap IDIV(arch::MemoryAddress) noexcept;
 
-    Trap IMUL(arch::Register) noexcept;
+    Trap IMUL(arch::Regs) noexcept;
     Trap IMUL(arch::MemoryAddress) noexcept;
 
     Trap IN(arch::Immediate, arch::RegLevel) noexcept;
     Trap IN(arch::RegLevel) noexcept;
 
-    Trap INC(arch::Register) noexcept;
+    Trap INC(arch::Regs) noexcept;
     Trap INC(arch::MemoryAddress) noexcept;
 
     Trap INT(arch::Immediate) noexcept;
@@ -116,9 +116,9 @@ struct SingleCore
     Trap JZ(arch::MemoryAddress) noexcept;   // TODO
 
     Trap LAHF(void) noexcept;
-    Trap LDS(arch::Register, arch::MemoryAddress) noexcept;
-    Trap LEA(arch::Register, arch::MemoryAddress) noexcept;
-    Trap LES(arch::Register, arch::MemoryAddress) noexcept;
+    Trap LDS(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap LEA(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap LES(arch::Regs, arch::MemoryAddress) noexcept;
 
     Trap LODSB(void) noexcept;
     Trap LODSW(void) noexcept;
@@ -128,49 +128,49 @@ struct SingleCore
     Trap LOOPNZ(arch::MemoryAddress) noexcept; // TODO
     Trap LOOPZ(arch::MemoryAddress) noexcept;  // TODO
 
-    Trap MOV(arch::Register, arch::Register) noexcept;
-    Trap MOV(arch::Register, arch::MemoryAddress) noexcept;
-    Trap MOV(arch::Register, arch::Immediate) noexcept;
+    Trap MOV(arch::Regs, arch::Regs) noexcept;
+    Trap MOV(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap MOV(arch::Regs, arch::Immediate) noexcept;
     Trap MOV(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap MOV(arch::MemoryAddress, arch::Register) noexcept;
+    Trap MOV(arch::MemoryAddress, arch::Regs) noexcept;
 
     Trap MOVSB(void) noexcept;
     Trap MOVSW(void) noexcept;
 
-    Trap MUL(arch::Register, arch::MemoryAddress) noexcept;
-    Trap NEG(arch::Register, arch::MemoryAddress) noexcept;
+    Trap MUL(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap NEG(arch::Regs, arch::MemoryAddress) noexcept;
     Trap NOP(void) noexcept;
-    Trap NOT(arch::Register, arch::MemoryAddress) noexcept;
+    Trap NOT(arch::Regs, arch::MemoryAddress) noexcept;
 
-    Trap OR(arch::Register, arch::Register) noexcept;
-    Trap OR(arch::Register, arch::MemoryAddress) noexcept;
-    Trap OR(arch::Register, arch::Immediate) noexcept;
+    Trap OR(arch::Regs, arch::Regs) noexcept;
+    Trap OR(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap OR(arch::Regs, arch::Immediate) noexcept;
     Trap OR(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap OR(arch::MemoryAddress, arch::Register) noexcept;
+    Trap OR(arch::MemoryAddress, arch::Regs) noexcept;
 
-    Trap OUT(arch::Immediate, arch::Register, arch::RegLevel) noexcept;
+    Trap OUT(arch::Immediate, arch::Regs, arch::RegLevel) noexcept;
     Trap OUT(arch::RegLevel) noexcept;
 
-    Trap POP(arch::Register) noexcept;
+    Trap POP(arch::Regs) noexcept;
     Trap POP(arch::MemoryAddress) noexcept;
 
     Trap POPA(void) noexcept;
     Trap POPF(void) noexcept;
 
-    Trap PUSH(arch::Register) noexcept;
+    Trap PUSH(arch::Regs) noexcept;
     Trap PUSH(arch::MemoryAddress) noexcept;
     Trap PUSH(arch::Immediate) noexcept;
     Trap PUSHF(void) noexcept;
 
-    Trap RCL(arch::Register) noexcept;
+    Trap RCL(arch::Regs) noexcept;
     Trap RCL(arch::MemoryAddress) noexcept;
     Trap RCL(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap RCL(arch::Register, arch::Immediate) noexcept;
+    Trap RCL(arch::Regs, arch::Immediate) noexcept;
 
-    Trap RCR(arch::Register) noexcept;
+    Trap RCR(arch::Regs) noexcept;
     Trap RCR(arch::MemoryAddress) noexcept;
     Trap RCR(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap RCR(arch::Register, arch::Immediate) noexcept;
+    Trap RCR(arch::Regs, arch::Immediate) noexcept;
 
     Trap REP(void) noexcept;   // TODO
     Trap REPE(void) noexcept;  // TODO
@@ -184,46 +184,46 @@ struct SingleCore
     Trap RETF(void) noexcept;
     Trap RETF(arch::Immediate) noexcept;
 
-    Trap ROL(arch::Register) noexcept;
+    Trap ROL(arch::Regs) noexcept;
     Trap ROL(arch::MemoryAddress) noexcept;
     Trap ROL(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap ROL(arch::Register, arch::Immediate) noexcept;
+    Trap ROL(arch::Regs, arch::Immediate) noexcept;
 
-    Trap ROR(arch::Register) noexcept;
+    Trap ROR(arch::Regs) noexcept;
     Trap ROR(arch::MemoryAddress) noexcept;
     Trap ROR(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap ROR(arch::Register, arch::Immediate) noexcept;
+    Trap ROR(arch::Regs, arch::Immediate) noexcept;
 
     Trap SAHF(void) noexcept;
 
-    Trap SAL(arch::Register) noexcept;
+    Trap SAL(arch::Regs) noexcept;
     Trap SAL(arch::MemoryAddress) noexcept;
     Trap SAL(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap SAL(arch::Register, arch::Immediate) noexcept;
+    Trap SAL(arch::Regs, arch::Immediate) noexcept;
 
-    Trap SAR(arch::Register) noexcept;
+    Trap SAR(arch::Regs) noexcept;
     Trap SAR(arch::MemoryAddress) noexcept;
     Trap SAR(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap SAR(arch::Register, arch::Immediate) noexcept;
+    Trap SAR(arch::Regs, arch::Immediate) noexcept;
 
-    Trap SBB(arch::Register, arch::Register) noexcept;
-    Trap SBB(arch::Register, arch::MemoryAddress) noexcept;
-    Trap SBB(arch::Register, arch::Immediate) noexcept;
+    Trap SBB(arch::Regs, arch::Regs) noexcept;
+    Trap SBB(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap SBB(arch::Regs, arch::Immediate) noexcept;
     Trap SBB(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap SBB(arch::MemoryAddress, arch::Register) noexcept;
+    Trap SBB(arch::MemoryAddress, arch::Regs) noexcept;
 
-    Trap SCASB(arch::Register) noexcept;
-    Trap SCASW(arch::Register) noexcept;
+    Trap SCASB(arch::Regs) noexcept;
+    Trap SCASW(arch::Regs) noexcept;
 
-    Trap SHL(arch::Register) noexcept;
+    Trap SHL(arch::Regs) noexcept;
     Trap SHL(arch::MemoryAddress) noexcept;
     Trap SHL(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap SHL(arch::Register, arch::Immediate) noexcept;
+    Trap SHL(arch::Regs, arch::Immediate) noexcept;
 
-    Trap SHR(arch::Register) noexcept;
+    Trap SHR(arch::Regs) noexcept;
     Trap SHR(arch::MemoryAddress) noexcept;
     Trap SHR(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap SHR(arch::Register, arch::Immediate) noexcept;
+    Trap SHR(arch::Regs, arch::Immediate) noexcept;
 
     Trap STC(void) noexcept;
     Trap STD(void) noexcept;
@@ -231,36 +231,40 @@ struct SingleCore
     Trap STOSB(void) noexcept;
     Trap STOSW(void) noexcept;
 
-    Trap SUB(arch::Register, arch::Register) noexcept;
-    Trap SUB(arch::Register, arch::MemoryAddress) noexcept;
-    Trap SUB(arch::Register, arch::Immediate) noexcept;
+    Trap SUB(arch::Regs, arch::Regs) noexcept;
+    Trap SUB(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap SUB(arch::Regs, arch::Immediate) noexcept;
     Trap SUB(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap SUB(arch::MemoryAddress, arch::Register) noexcept;
+    Trap SUB(arch::MemoryAddress, arch::Regs) noexcept;
 
-    Trap TEST(arch::Register, arch::Register) noexcept;
-    Trap TEST(arch::Register, arch::MemoryAddress) noexcept;
-    Trap TEST(arch::Register, arch::Immediate) noexcept;
+    Trap TEST(arch::Regs, arch::Regs) noexcept;
+    Trap TEST(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap TEST(arch::Regs, arch::Immediate) noexcept;
     Trap TEST(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap TEST(arch::MemoryAddress, arch::Register) noexcept;
+    Trap TEST(arch::MemoryAddress, arch::Regs) noexcept;
 
-    Trap XCHG(arch::Register, arch::Register) noexcept;
-    Trap XCHG(arch::Register, arch::MemoryAddress) noexcept;
-    Trap XCHG(arch::MemoryAddress, arch::Register) noexcept;
+    Trap XCHG(arch::Regs, arch::Regs) noexcept;
+    Trap XCHG(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap XCHG(arch::MemoryAddress, arch::Regs) noexcept;
 
     Trap XLATB(void) noexcept;
-    Trap XOR(arch::Register, arch::Register) noexcept;
-    Trap XOR(arch::Register, arch::MemoryAddress) noexcept;
-    Trap XOR(arch::Register, arch::Immediate) noexcept;
+    Trap XOR(arch::Regs, arch::Regs) noexcept;
+    Trap XOR(arch::Regs, arch::MemoryAddress) noexcept;
+    Trap XOR(arch::Regs, arch::Immediate) noexcept;
     Trap XOR(arch::MemoryAddress, arch::Immediate) noexcept;
-    Trap XOR(arch::MemoryAddress, arch::Register) noexcept;
+    Trap XOR(arch::MemoryAddress, arch::Regs) noexcept;
 
-  private:
     void parseInstruction() noexcept;
+    arch::Register& getReg(arch::Regs) noexcept;
     [[nodiscard]] arch::Immediate readRegister(arch::Regs) noexcept;
     void writeRegister(arch::Regs, arch::Immediate) noexcept;
-    arch::Register setupFlags(arch::Register, arch::Register, uint32_t) noexcept;
-    bool calculateParity(arch::Register) noexcept;
+    void setFlag(arch::Flags, arch::Immediate) noexcept;
+    arch::Immediate readFlag(arch::Flags) noexcept;
+    arch::MemoryAddress getEffectiveAddr(arch::Regs, arch::Regs) const noexcept;
+    arch::Immediate setFlagOnAdd(std::uint32_t, std::uint32_t, std::uint32_t) noexcept;
+    
 
+  private:
     // General Purpose Registers
     arch::Register theAX{arch::Register{.theLabel = arch::Regs::AX, .theRegisterValue = 0}};
     arch::Register theBX{arch::Register{.theLabel = arch::Regs::BX, .theRegisterValue = 0}};

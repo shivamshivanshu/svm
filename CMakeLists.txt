@@ -3,7 +3,7 @@ set(PROJECT_NAME Svm)
 set(PROJECT_LIB_NAME Svm_Lib)
 project(${PROJECT_NAME} VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -26,7 +26,7 @@ target_compile_options(${PROJECT_LIB_NAME} PRIVATE
     $<$<CONFIG:Debug>:${DEBUG_FLAGS}> 
     $<$<CONFIG:Release>:${RELEASE_FLAGS}>
 )
-target_compile_features(${PROJECT_LIB_NAME} PRIVATE cxx_std_20)
+target_compile_features(${PROJECT_LIB_NAME} PRIVATE cxx_std_23)
 
 add_executable(${PROJECT_NAME} entry.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LIB_NAME})
@@ -35,7 +35,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Debug>:${DEBUG_FLAGS}> 
     $<$<CONFIG:Release>:${RELEASE_FLAGS}>
 )
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 
 if(BUILD_TESTING)
     include(FetchContent)
@@ -58,7 +58,7 @@ if(BUILD_TESTING)
             $<$<CONFIG:Release>:${RELEASE_FLAGS}>
         )
         set_target_properties(UnitTests PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        target_compile_features(UnitTests PRIVATE cxx_std_20)
+        target_compile_features(UnitTests PRIVATE cxx_std_23)
         add_test(NAME AllTests COMMAND UnitTests)
     endif()
 endif()
