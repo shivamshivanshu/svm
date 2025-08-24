@@ -1,20 +1,21 @@
 #pragma once
-#include <cstdint>
-#include <cstddef>
 #include <array>
+#include <cstdint>
 #include <utility>
 
-#include "trap.hpp"
 #include "arch.hpp"
+#include "constants.hpp"
+#include "trap.hpp"
+
 namespace svm
 {
-    struct Memory
-    {
-    private:
-        std::array<T, N> memory;
+struct RandomAccessMemory
+{
+  private:
+    std::array<std::uint8_t, constants::MAX_MEMORY_CAPACITY> theMemory;
 
-    public:
-        [[nodiscard]] Trap write(MemoryAddress addr, Immediate value) noexcept;
-        [[nodiscard]] std::pair<Trap, T> read(MemoryAddress addr) const noexcept;
-    };
+  public:
+    [[nodiscard]] Trap write(arch::MemoryAddress aMemoryAddress, arch::Immediate aImmediate) noexcept;
+    [[nodiscard]] std::pair<Trap, arch::Immediate> read(arch::MemoryAddress aMemoryAddress) const noexcept;
+};
 } // namespace svm
