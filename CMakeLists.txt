@@ -57,7 +57,8 @@ if(BUILD_TESTING)
             $<$<CONFIG:Debug>:${DEBUG_FLAGS}> 
             $<$<CONFIG:Release>:${RELEASE_FLAGS}>
         )
-        target_compile_features(UnitTests PUBLIC cxx_std_20)
+        set_target_properties(UnitTests PROPERTIES POSITION_INDEPENDENT_CODE ON)
+        target_compile_features(UnitTests PRIVATE cxx_std_20)
         add_test(NAME AllTests COMMAND UnitTests)
     endif()
 endif()

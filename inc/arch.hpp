@@ -1,8 +1,6 @@
 #pragma once
 #include <cstdint>
 
-#include "constants.hpp"
-
 namespace svm::arch
 {
 

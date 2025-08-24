@@ -11,11 +11,16 @@ namespace svm
 {
 struct RandomAccessMemory
 {
-  private:
-    std::array<std::uint8_t, constants::MAX_MEMORY_CAPACITY> theMemory;
+    static constexpr auto Capacity = constants::MAX_MEMORY_CAPACITY;
+    static constexpr auto MemoryAlign = constants::MEMORY_BUS_ALIGNMENT;
 
-  public:
+    RandomAccessMemory() = default;
     [[nodiscard]] Trap write(arch::MemoryAddress aMemoryAddress, arch::Immediate aImmediate) noexcept;
     [[nodiscard]] std::pair<Trap, arch::Immediate> read(arch::MemoryAddress aMemoryAddress) const noexcept;
+
+  private:
+    bool isMemoryInBound(arch::MemoryAddress) const noexcept;
+    std::array<std::uint8_t, constants::MAX_MEMORY_CAPACITY> theMemory;
+
 };
 } // namespace svm
