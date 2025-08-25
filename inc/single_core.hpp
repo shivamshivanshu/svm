@@ -255,14 +255,13 @@ struct SingleCore
     Trap XOR(arch::MemoryAddress, arch::Regs) noexcept;
 
     void parseInstruction() noexcept;
-    arch::Register& getReg(arch::Regs) noexcept;
+    arch::Register &getReg(arch::Regs) noexcept;
     [[nodiscard]] arch::Immediate readRegister(arch::Regs) noexcept;
     void writeRegister(arch::Regs, arch::Immediate) noexcept;
     void setFlag(arch::Flags, arch::Immediate) noexcept;
     arch::Immediate readFlag(arch::Flags) noexcept;
     arch::MemoryAddress getEffectiveAddr(arch::Regs, arch::Regs) const noexcept;
     arch::Immediate setFlagOnAdd(std::uint32_t, std::uint32_t, std::uint32_t) noexcept;
-    
 
   private:
     // General Purpose Registers

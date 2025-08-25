@@ -102,7 +102,7 @@ Trap SingleCore::AAA(void) noexcept
         setFlag(arch::Flags::AF, 0);
         setFlag(arch::Flags::CF, 0);
     }
-    arch::Immediate myAx = ((myAH & 0xFF) << 8) | (myAL & 0xFF);
+    arch::Immediate myAx = ((myAH & 0xFF) << 8) | (myAL & 0xF);
     theAX.theRegisterValue = myAx;
     return Trap::OK;
 }
@@ -151,7 +151,7 @@ Trap SingleCore::AAS(void) noexcept
         setFlag(arch::Flags::CF, 0);
     }
 
-    arch::Immediate myAx = ((myAH & 0xFF) << 8) | (myAL & 0xFF);
+    arch::Immediate myAx = ((myAH & 0xFF) << 8) | (myAL & 0xF);
     theAX.theRegisterValue = myAx;
     return Trap::OK;
 }
@@ -265,6 +265,31 @@ Trap SingleCore::STD(void) noexcept
 Trap SingleCore::STI(void) noexcept
 {
     setFlag(svm::arch::Flags::IF, 1U);
+    return Trap::OK;
+}
+
+Trap SingleCore::CLC(void) noexcept
+{
+    setFlag(svm::arch::Flags::CF, 0U);
+    return Trap::OK;
+}
+
+Trap SingleCore::CLD(void) noexcept
+{
+    setFlag(svm::arch::Flags::DF, 0U);
+    return Trap::OK;
+}
+
+Trap SingleCore::CLI(void) noexcept
+{
+    setFlag(svm::arch::Flags::IF, 0U);
+    return Trap::OK;
+}
+
+Trap SingleCore::CMC(void) noexcept
+{
+    const auto myFlag = readFlag(svm::arch::Flags::CF);
+    setFlag(svm::arch::Flags::CF, myFlag ^ 1);
     return Trap::OK;
 }
 
