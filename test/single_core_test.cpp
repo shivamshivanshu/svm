@@ -439,3 +439,112 @@ TEST_F(SingleCoreTest, CMP_ParityFlag_Check)
 
     EXPECT_EQ(theCpu.readFlag(Flags::PF), false); // Result = 0x02 → even parity = PF=1
 }
+
+TEST_F(SingleCoreTest, CWD_PositiveAX_ClearsDX)
+{
+    theCpu.writeRegister(Regs::AX, 0x1234);
+
+    const auto myTrap = theCpu.CWD();
+
+    EXPECT_EQ(myTrap, Trap::OK);
+    EXPECT_EQ(theCpu.readRegister(Regs::DX), 0x0000);
+}
+
+TEST_F(SingleCoreTest, CWD_NegativeAX_SetsDXFFFF)
+{
+    theCpu.writeRegister(Regs::AX, 0x8000); // Negative in signed 16-bit
+
+    const auto myTrap = theCpu.CWD();
+
+    EXPECT_EQ(myTrap, Trap::OK);
+    EXPECT_EQ(theCpu.readRegister(Regs::DX), 0xFFFF);
+}
+
+TEST_F(SingleCoreTest, CMPSW_CompareEqualWords_SetsZeroFlag)
+{
+    Trap myTrap{Trap::OK};
+    theCpu.writeRegister(Regs::SI, 0x5000);
+    theCpu.writeRegister(Regs::DI, 0x6000);
+    theCpu.writeRegister(Regs::DS, 0x0001);
+    theCpu.writeRegister(Regs::ES, 0x0001);
+
+    myTrap = theMemory.write({.theAddress = (0x0001 * 16U) + 0x5000}, 0x1234);
+    EXPECT_EQ(myTrap, Trap::OK);
+    myTrap = theMemory.write({.theAddress = (0x0001 * 16U) + 0x6000}, 0x1234);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    myTrap = theCpu.CMPSW();
+    EXPECT_EQ(myTrap, Trap::OK);
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 1);
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+    EXPECT_EQ(theCpu.readRegister(Regs::SI), 0x5002);
+    EXPECT_EQ(theCpu.readRegister(Regs::DI), 0x6002);
+}
+
+TEST_F(SingleCoreTest, CMPSW_CompareDifferentWords_SetsFlags)
+{
+    Trap myTrap{Trap::OK};
+    theCpu.writeRegister(Regs::SI, 0x7000);
+    theCpu.writeRegister(Regs::DI, 0x8000);
+    theCpu.writeRegister(Regs::DS, 0x0001);
+    theCpu.writeRegister(Regs::ES, 0x0001);
+
+    myTrap = theMemory.write({.theAddress = (0x00001 * 16U) + 0x7000}, 0x10);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    myTrap = theMemory.write({.theAddress = (0x00001 * 16U) + 0x8000}, 0x20);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    myTrap = theCpu.CMPSW();
+    EXPECT_EQ(myTrap, Trap::OK);
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 1);
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 1);
+    EXPECT_EQ(theCpu.readRegister(Regs::SI), 0x7002);
+    EXPECT_EQ(theCpu.readRegister(Regs::DI), 0x8002);
+}
+
+TEST_F(SingleCoreTest, CMPSB_CompareEqualBytes_SetsZeroFlag)
+{
+    Trap myTrap{Trap::OK};
+    theCpu.writeRegister(Regs::SI, 0x1000);
+    theCpu.writeRegister(Regs::DI, 0x2000);
+    theCpu.writeRegister(Regs::DS, 0x0001);
+    theCpu.writeRegister(Regs::ES, 0x0001);
+
+    myTrap = theMemory.writeByte({.theAddress = (0x00001 * 16U) + 0x1000}, 0x42); // Source
+    EXPECT_EQ(myTrap, Trap::OK);
+    myTrap = theMemory.writeByte({.theAddress = (0x00001 * 16U) + 0x2000}, 0x42); // Destination
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    myTrap = theCpu.CMPSB();
+    EXPECT_EQ(myTrap, Trap::OK);
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 1); // Equal
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 0);
+    EXPECT_EQ(theCpu.readRegister(Regs::SI), 0x1001);
+    EXPECT_EQ(theCpu.readRegister(Regs::DI), 0x2001);
+}
+
+TEST_F(SingleCoreTest, CMPSB_CompareDifferentBytes_SetsFlags)
+{
+    Trap myTrap{Trap::OK};
+    theCpu.writeRegister(Regs::SI, 0x3000);
+    theCpu.writeRegister(Regs::DI, 0x4000);
+    theCpu.writeRegister(Regs::DS, 0x0001);
+    theCpu.writeRegister(Regs::ES, 0x0001);
+
+    myTrap = theMemory.writeByte({.theAddress = (0x00001 * 16U) + 0x3000}, 0x10); // Source
+    EXPECT_EQ(myTrap, Trap::OK);
+    myTrap = theMemory.writeByte({.theAddress = (0x00001 * 16U) + 0x4000}, 0x20); // Destination
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    myTrap = theCpu.CMPSB();
+
+    EXPECT_EQ(myTrap, Trap::OK);
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 0); // Not equal
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 1); // Because 0x10 < 0x20
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 1); // Negative result
+    EXPECT_EQ(theCpu.readRegister(Regs::SI), 0x3001);
+    EXPECT_EQ(theCpu.readRegister(Regs::DI), 0x4001);
+}

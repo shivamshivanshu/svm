@@ -270,8 +270,8 @@ struct SingleCore
     arch::MemoryAddress getEffectiveAddr(arch::Regs, arch::Regs) const noexcept;
 
   private:
-    template<BinaryOp Op>
-    arch::Immediate computeArithmeticFlags(std::uint32_t, std::uint32_t, std::uint32_t) noexcept;
+    template<BinaryOp Op, typename IntegralT>
+    arch::Immediate computeArithmeticFlags(IntegralT, IntegralT, IntegralT) noexcept;
     arch::Immediate setFlagOnAdd(std::uint32_t, std::uint32_t, std::uint32_t) noexcept;
     arch::Immediate setFlagOnCmp(std::uint32_t, std::uint32_t) noexcept;
     // General Purpose Registers

@@ -1,3 +1,5 @@
+#include <iostream>
+#include <limits>
 #include <utility>
 
 #include "arch.hpp"
@@ -160,7 +162,7 @@ Trap SingleCore::AAS(void) noexcept
 
 arch::Immediate SingleCore::setFlagOnAdd(std::uint32_t aSource, std::uint32_t aDest, std::uint32_t aCarry) noexcept
 {
-    return computeArithmeticFlags<SingleCore::BinaryOp::Add>(aSource, aDest, aCarry);
+    return computeArithmeticFlags<SingleCore::BinaryOp::Add, std::uint16_t>(aSource, aDest, aCarry);
 }
 
 Trap SingleCore::ADC(arch::Regs aRegister, arch::MemoryAddress aMemory) noexcept
@@ -384,30 +386,32 @@ Trap SingleCore::CMP(arch::MemoryAddress aFirst, arch::Regs aSecond) noexcept
     return CMP(aFirst, static_cast<arch::Immediate>(readRegister(aSecond)));
 }
 
-template <SingleCore::BinaryOp Op>
-arch::Immediate SingleCore::computeArithmeticFlags(std::uint32_t aDest, std::uint32_t aSource,
-                                                   std::uint32_t aCarry) noexcept
+template <SingleCore::BinaryOp Op, typename IntegralT>
+arch::Immediate SingleCore::computeArithmeticFlags(IntegralT aDest, IntegralT aSource, IntegralT aCarry) noexcept
 {
-    std::uint32_t myResult{};
+    using WideT = std::make_unsigned_t<std::conditional_t<sizeof(IntegralT) < 4, uint32_t, IntegralT>>;
+    WideT myResult{};
+    constexpr WideT MSB_MASK = IntegralT(1) << (sizeof(IntegralT) * 8 - 1); // 0x80 for 8-bit, 0x8000 for 16-bit
+    constexpr WideT LOW_NIBBLE_MASK = 0xF;
 
     if constexpr (Op == SingleCore::BinaryOp::Add)
     {
         myResult = aDest + aSource + aCarry;
 
-        setFlag(arch::Flags::CF, myResult > 0xFFFF);
-        setFlag(arch::Flags::AF, ((aDest & 0xF) + (aSource & 0xF) + aCarry) > 0xF);
-        setFlag(arch::Flags::OF, ((aDest ^ myResult) & (aSource ^ myResult) & 0x8000) != 0);
+        setFlag(arch::Flags::CF, myResult > std::numeric_limits<IntegralT>::max());
+        setFlag(arch::Flags::AF, ((aDest & LOW_NIBBLE_MASK) + (aSource & LOW_NIBBLE_MASK) + aCarry) > LOW_NIBBLE_MASK);
+        setFlag(arch::Flags::OF, ((aDest ^ myResult) & (aSource ^ myResult) & MSB_MASK) != 0);
     }
     else if constexpr (Op == SingleCore::BinaryOp::Sub)
     {
         myResult = aDest - (aSource + aCarry);
         setFlag(arch::Flags::CF, aDest < (aSource + aCarry));
         setFlag(arch::Flags::AF, ((aDest ^ aSource ^ myResult) & 0x10) != 0);
-        setFlag(arch::Flags::OF, ((aDest ^ aSource) & (aDest ^ myResult) & 0x8000) != 0);
+        setFlag(arch::Flags::OF, ((aDest ^ aSource) & (aDest ^ myResult) & MSB_MASK) != 0);
     }
 
-    myResult &= 0xFFFF;
-    setFlag(arch::Flags::SF, (myResult & 0x8000) != 0);
+    myResult &= std::numeric_limits<IntegralT>::max();
+    setFlag(arch::Flags::SF, (myResult & MSB_MASK) != 0);
     setFlag(arch::Flags::ZF, myResult == 0);
     setFlag(arch::Flags::PF, SingleCoreUtil::parity(myResult & 0xFF));
 
@@ -416,7 +420,85 @@ arch::Immediate SingleCore::computeArithmeticFlags(std::uint32_t aDest, std::uin
 
 arch::Immediate SingleCore::setFlagOnCmp(std::uint32_t aFirst, std::uint32_t aSecond) noexcept
 {
-    return computeArithmeticFlags<SingleCore::BinaryOp::Sub>(aFirst, aSecond, 0);
+    return computeArithmeticFlags<SingleCore::BinaryOp::Sub, std::uint16_t>(aFirst, aSecond, 0);
+}
+
+Trap SingleCore::CMPSB(void) noexcept
+{
+    const auto myDS = theDS.theRegisterValue;
+    const auto mySI = theSI.theRegisterValue;
+    const auto myES = theES.theRegisterValue;
+    const auto myDI = theDI.theRegisterValue;
+
+    const auto [mySrcTrap, mySrcValue] = theMemory.readByte(arch::MemoryAddress{.theAddress = (myDS * 16U) + mySI});
+    if (mySrcTrap != Trap::OK)
+        return mySrcTrap;
+
+    const auto [myDestTrap, myDestValue] = theMemory.readByte(arch::MemoryAddress{.theAddress = (myES * 16U) + myDI});
+    if (myDestTrap != Trap::OK)
+        return myDestTrap;
+
+    // destination - source
+    computeArithmeticFlags<SingleCore::BinaryOp::Sub, std::uint8_t>(mySrcValue, myDestValue, 0);
+
+    if (readFlag(arch::Flags::DF) == 0)
+    {
+        theSI.theRegisterValue += 1;
+        theDI.theRegisterValue += 1;
+    }
+    else
+    {
+        theSI.theRegisterValue -= 1;
+        theDI.theRegisterValue -= 1;
+    }
+
+    return Trap::OK;
+}
+
+Trap SingleCore::CMPSW(void) noexcept
+{
+    const auto myDS = theDS.theRegisterValue;
+    const auto mySI = theSI.theRegisterValue;
+    const auto myES = theES.theRegisterValue;
+    const auto myDI = theDI.theRegisterValue;
+
+    const auto [mySrcTrap, mySrcValue] = theMemory.read(arch::MemoryAddress{.theAddress = (myDS * 16U) + mySI});
+    if (mySrcTrap != Trap::OK)
+        return mySrcTrap;
+
+    const auto [myDestTrap, myDestValue] = theMemory.read(arch::MemoryAddress{.theAddress = (myES * 16U) + myDI});
+    if (myDestTrap != Trap::OK)
+        return myDestTrap;
+
+    // destination - source
+    computeArithmeticFlags<SingleCore::BinaryOp::Sub, std::uint16_t>(mySrcValue, myDestValue, 0);
+
+    if (readFlag(arch::Flags::DF) == 0)
+    {
+        theSI.theRegisterValue += 2;
+        theDI.theRegisterValue += 2;
+    }
+    else
+    {
+        theSI.theRegisterValue -= 2;
+        theDI.theRegisterValue -= 2;
+    }
+
+    return Trap::OK;
+}
+
+Trap SingleCore::CWD(void) noexcept
+{
+    const auto myAX = theAX.theRegisterValue;
+    if ((myAX & 0x8000) != 0)
+    {
+        theDX.theRegisterValue = 0xFFFF;
+    }
+    else
+    {
+        theDX.theRegisterValue = 0x0;
+    }
+    return Trap::OK;
 }
 
 } // namespace svm
