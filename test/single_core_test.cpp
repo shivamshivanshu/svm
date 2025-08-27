@@ -250,3 +250,93 @@ TEST_F(SingleCoreTest, ADC_ParityFlag_Check)
     EXPECT_EQ(theCpu.readRegister(Regs::AX), 0x0003);
     EXPECT_EQ(theCpu.readFlag(Flags::PF), true);
 }
+
+TEST_F(SingleCoreTest, AND_Reg_Reg_Test)
+{
+    theCpu.writeRegister(Regs::AX, 0xFFFF);
+    theCpu.writeRegister(Regs::BX, 0x00FF);
+
+    theCpu.AND(Regs::AX, Regs::BX);
+
+    const auto myAx = theCpu.readRegister(Regs::AX);
+    EXPECT_EQ(myAx, 0x00FF);
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::OF), 0);
+}
+
+TEST_F(SingleCoreTest, AND_Reg_Imm_Test)
+{
+    theCpu.writeRegister(Regs::AX, 0x0F0F);
+    theCpu.AND(Regs::AX, 0x00FF);
+
+    const auto myAx = theCpu.readRegister(Regs::AX);
+    EXPECT_EQ(myAx, 0x000F);
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::OF), 0);
+}
+
+TEST_F(SingleCoreTest, AND_Mem_Imm_Test)
+{
+    const auto myWriteTrap = theMemory.write(DEFAULT_MEM_ADDR, 0xFFFF);
+    EXPECT_EQ(myWriteTrap, svm::Trap::OK);
+
+    theCpu.AND(DEFAULT_MEM_ADDR, 0x0F0F);
+
+    const auto [myReadTrap, myValue] = theMemory.read(DEFAULT_MEM_ADDR);
+    EXPECT_EQ(myReadTrap, Trap::OK);
+    EXPECT_EQ(myValue, 0x0F0F);
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::OF), 0);
+}
+
+TEST_F(SingleCoreTest, AND_Mem_Reg_Test)
+{
+    const auto myTrap = theMemory.write(DEFAULT_MEM_ADDR, 0xFFFF);
+    EXPECT_EQ(myTrap, svm::Trap::OK);
+
+    theCpu.writeRegister(Regs::BX, 0x00FF);
+    theCpu.AND(DEFAULT_MEM_ADDR, Regs::BX);
+
+    const auto [myReadTrap, myValue] = theMemory.read(DEFAULT_MEM_ADDR);
+    EXPECT_EQ(myReadTrap, Trap::OK);
+    EXPECT_EQ(myValue, 0x00FF);
+}
+
+TEST_F(SingleCoreTest, AND_SignFlag_Set)
+{
+    theCpu.writeRegister(Regs::AX, 0xFFFF);
+    theCpu.AND(Regs::AX, 0x8000);
+
+    EXPECT_EQ(theCpu.readRegister(Regs::AX), 0x8000);
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 1);
+}
+
+TEST_F(SingleCoreTest, AND_ZeroFlag_Set)
+{
+    theCpu.writeRegister(Regs::AX, 0x0F0F);
+    theCpu.AND(Regs::AX, 0xF0F0);
+
+    EXPECT_EQ(theCpu.readRegister(Regs::AX), 0x0000);
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 1);
+}
+
+TEST_F(SingleCoreTest, AND_ParityFlag_Check)
+{
+    const auto myMemoryAddr = DEFAULT_MEM_ADDR;
+
+    // Case 1: AL = 0x02 → PF = false (odd parity)
+    theCpu.writeRegister(Regs::AX, 0x0003);
+    auto myTrap = theMemory.write(myMemoryAddr, 0x0002);
+    EXPECT_EQ(myTrap, Trap::OK);
+    theCpu.AND(Regs::AX, myMemoryAddr);
+    EXPECT_EQ(theCpu.readRegister(Regs::AX), 0x0002);
+    EXPECT_EQ(theCpu.readFlag(Flags::PF), false);
+
+    // Case 2: AL = 0x03 → PF = true (even parity)
+    theCpu.writeRegister(Regs::AX, 0x0003);
+    myTrap = theMemory.write(myMemoryAddr, 0x0003);
+    EXPECT_EQ(myTrap, Trap::OK);
+    theCpu.AND(Regs::AX, myMemoryAddr);
+    EXPECT_EQ(theCpu.readRegister(Regs::AX), 0x0003);
+    EXPECT_EQ(theCpu.readFlag(Flags::PF), true);
+}

@@ -35,6 +35,7 @@ struct SingleCore
     Trap AND(arch::Regs, arch::Immediate) noexcept;
     Trap AND(arch::MemoryAddress, arch::Immediate) noexcept;
     Trap AND(arch::MemoryAddress, arch::Regs) noexcept;
+    void AND_setFlags(arch::Immediate) noexcept;
 
     Trap CALL(arch::MemoryAddress) noexcept;
     Trap CALL(arch::Regs) noexcept;

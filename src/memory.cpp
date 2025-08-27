@@ -34,8 +34,8 @@ Trap RandomAccessMemory::write(arch::MemoryAddress aMemoryAddress, arch::Immedia
     {
         for (std::size_t i{}; i < RandomAccessMemory::MemoryAlign; ++i)
         {
-            theMemory[aMemoryAddress.theAddress + i] =
-                aValue & (constants::BYTE_MASK << (constants::CHAR_SIZE * (RandomAccessMemory::MemoryAlign - 1 - i)));
+            const std::size_t myShift = constants::CHAR_SIZE * (RandomAccessMemory::MemoryAlign - 1 - i);
+            theMemory[aMemoryAddress.theAddress + i] = (aValue >> myShift) & constants::BYTE_MASK;
         }
         return Trap::OK;
     }

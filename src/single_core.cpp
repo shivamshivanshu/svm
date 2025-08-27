@@ -1,9 +1,11 @@
 #include <type_traits>
-#include <unistd.h>
 #include <utility>
 
 #include "arch.hpp"
 #include "single_core.hpp"
+#include "single_core_util.hpp"
+#include "trap.hpp"
+
 namespace svm
 {
 SingleCore::SingleCore(RandomAccessMemory &aMemory) : theMemory{aMemory}
@@ -158,18 +160,6 @@ Trap SingleCore::AAS(void) noexcept
 
 arch::Immediate SingleCore::setFlagOnAdd(std::uint32_t aSource, std::uint32_t aDest, std::uint32_t aCarry) noexcept
 {
-    auto myParity = [](std::uint8_t aValue) -> bool {
-        bool myCurrParity = true;
-        for (std::size_t i{}; i < 8; ++i)
-        {
-            if (aValue & (1 << i))
-            {
-                myCurrParity = !myCurrParity;
-            }
-        }
-        return myCurrParity;
-    };
-
     const auto myResult = aSource + aDest + aCarry;
 
     const bool myIsCarryFlag = myResult > 0xFFFF;
@@ -177,7 +167,7 @@ arch::Immediate SingleCore::setFlagOnAdd(std::uint32_t aSource, std::uint32_t aD
     const bool myIsOverflowFlag = ((aDest ^ myResult) & (aSource ^ myResult) & 0x8000) != 0;
     const bool myIsSignFlag = (myResult & 0x8000) != 0;
     const bool myIsZeroFlag = (myResult & 0xFFFF) == 0;
-    const bool myIsParityFlag = myParity(myResult & 0xFF);
+    const bool myIsParityFlag = SingleCoreUtil::parity(myResult & 0xFF);
 
     setFlag(arch::Flags::CF, myIsCarryFlag);
     setFlag(arch::Flags::AF, myAuxiliaryFlag);
@@ -291,6 +281,68 @@ Trap SingleCore::CMC(void) noexcept
     const auto myFlag = readFlag(svm::arch::Flags::CF);
     setFlag(svm::arch::Flags::CF, myFlag ^ 1);
     return Trap::OK;
+}
+
+void SingleCore::AND_setFlags(arch::Immediate aImmediate) noexcept
+{
+    const bool myIsCarryFlag = false;
+    const bool myIsOverflowFlag = false;
+    const bool myIsSignFlag = (aImmediate & 0x8000) != 0;
+    const bool myIsZeroFlag = (aImmediate & 0xFFFF) == 0;
+    const bool myIsParityFlag = SingleCoreUtil::parity(aImmediate & 0xFF);
+
+    setFlag(arch::Flags::CF, myIsCarryFlag);
+    setFlag(arch::Flags::OF, myIsOverflowFlag);
+    setFlag(arch::Flags::SF, myIsSignFlag);
+    setFlag(arch::Flags::ZF, myIsZeroFlag);
+    setFlag(arch::Flags::PF, myIsParityFlag);
+}
+
+Trap SingleCore::AND(arch::Regs aFirst, arch::Regs aSecond) noexcept
+{
+    const auto mySecond = readRegister(aSecond);
+    return AND(aFirst, mySecond);
+}
+
+Trap SingleCore::AND(arch::Regs aFirst, arch::MemoryAddress aSecond) noexcept
+{
+    const auto [myTrap, myMemoryValue] = theMemory.read(aSecond);
+    if (myTrap != Trap::OK)
+    {
+        return myTrap;
+    }
+    return AND(aFirst, static_cast<arch::Immediate>(myMemoryValue));
+}
+
+Trap SingleCore::AND(arch::Regs aFirst, arch::Immediate aSecond) noexcept
+{
+    const arch::Immediate myResult = readRegister(aFirst) & aSecond;
+    writeRegister(aFirst, myResult);
+    AND_setFlags(myResult);
+    return Trap::OK;
+}
+
+Trap SingleCore::AND(arch::MemoryAddress aFirst, arch::Immediate aSecond) noexcept
+{
+    const auto [myTrap, myMemoryValue] = theMemory.read(aFirst);
+    if (myTrap != Trap::OK)
+    {
+        return myTrap;
+    }
+    const auto myResult = myMemoryValue & aSecond;
+    const auto myWriteTrap = theMemory.write(aFirst, myResult);
+    if (myWriteTrap != Trap::OK)
+    {
+        return myWriteTrap;
+    }
+    AND_setFlags(myResult);
+    return Trap::OK;
+}
+
+Trap SingleCore::AND(arch::MemoryAddress aFirst, arch::Regs aSecond) noexcept
+{
+    const arch::Immediate mySecond = readRegister(aSecond);
+    return AND(aFirst, mySecond);
 }
 
 } // namespace svm
