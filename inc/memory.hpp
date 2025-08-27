@@ -16,7 +16,9 @@ struct RandomAccessMemory
 
     RandomAccessMemory() = default;
     [[nodiscard]] Trap write(arch::MemoryAddress aMemoryAddress, arch::Immediate aImmediate) noexcept;
+    [[nodiscard]] Trap writeByte(arch::MemoryAddress aMemoryAddress, arch::Immediate aImmediate) noexcept;
     [[nodiscard]] std::pair<Trap, arch::Immediate> read(arch::MemoryAddress aMemoryAddress) const noexcept;
+    [[nodiscard]] std::pair<Trap, arch::Immediate> readByte(arch::MemoryAddress aMemoryAddress) const noexcept;
 
   private:
     bool isMemoryInBound(arch::MemoryAddress) const noexcept;
