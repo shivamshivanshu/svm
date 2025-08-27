@@ -340,3 +340,102 @@ TEST_F(SingleCoreTest, AND_ParityFlag_Check)
     EXPECT_EQ(theCpu.readRegister(Regs::AX), 0x0003);
     EXPECT_EQ(theCpu.readFlag(Flags::PF), true);
 }
+
+TEST_F(SingleCoreTest, CBW_Test)
+{
+    theCpu.writeRegister(Regs::AX, 0xFB);
+    theCpu.CBW();
+    EXPECT_EQ(theCpu.readRegister(Regs::AX), 0xFFFB);
+}
+
+TEST_F(SingleCoreTest, CMP_Reg_Reg_EqualValues)
+{
+    theCpu.writeRegister(Regs::AX, 0x1234);
+    theCpu.writeRegister(Regs::BX, 0x1234);
+
+    const auto myTrap = theCpu.CMP(Regs::AX, Regs::BX);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 1); // Zero Flag set
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::OF), 0);
+}
+
+TEST_F(SingleCoreTest, CMP_Reg_Reg_DestLessThanSource)
+{
+    theCpu.writeRegister(Regs::AX, 0x0005);
+    theCpu.writeRegister(Regs::BX, 0x000A);
+
+    const auto myTrap = theCpu.CMP(Regs::AX, Regs::BX);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 1); // Borrow occurred
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 1); // Negative result
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 0);
+}
+
+TEST_F(SingleCoreTest, CMP_Reg_Reg_DestGreaterThanSource)
+{
+    theCpu.writeRegister(Regs::AX, 0x000A);
+    theCpu.writeRegister(Regs::BX, 0x0005);
+
+    const auto myTrap = theCpu.CMP(Regs::AX, Regs::BX);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 0);
+}
+
+TEST_F(SingleCoreTest, CMP_Reg_Imm_OverflowFlag_Set)
+{
+    theCpu.writeRegister(Regs::AX, 0x8000); // -32768 in signed 16-bit
+    const auto myTrap = theCpu.CMP(Regs::AX, 0x0001);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::OF), 1);
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 0);
+}
+
+TEST_F(SingleCoreTest, CMP_Reg_Imm_AuxiliaryFlag_Set)
+{
+    theCpu.writeRegister(Regs::AX, 0x000F);
+    const auto myTrap = theCpu.CMP(Regs::AX, 0x0001);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::AF), 0);
+}
+
+TEST_F(SingleCoreTest, CMP_Mem_Imm_Test)
+{
+    const auto myWriteTrap = theMemory.write(DEFAULT_MEM_ADDR, 0x0005);
+    EXPECT_EQ(myWriteTrap, Trap::OK);
+
+    const auto myTrap = theCpu.CMP(DEFAULT_MEM_ADDR, 0x0005);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::ZF), 1);
+}
+
+TEST_F(SingleCoreTest, CMP_Mem_Reg_Test)
+{
+    const auto myWriteTrap = theMemory.write(DEFAULT_MEM_ADDR, 0x0010);
+    EXPECT_EQ(myWriteTrap, Trap::OK);
+    theCpu.writeRegister(Regs::BX, 0x0001);
+
+    const auto myTrap = theCpu.CMP(DEFAULT_MEM_ADDR, Regs::BX);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::SF), 0);
+    EXPECT_EQ(theCpu.readFlag(Flags::CF), 0);
+}
+
+TEST_F(SingleCoreTest, CMP_ParityFlag_Check)
+{
+    theCpu.writeRegister(Regs::AX, 0x0003);
+    const auto myTrap = theCpu.CMP(Regs::AX, 0x0001);
+    EXPECT_EQ(myTrap, Trap::OK);
+
+    EXPECT_EQ(theCpu.readFlag(Flags::PF), false); // Result = 0x02 → even parity = PF=1
+}

@@ -1,7 +1,7 @@
-#include <type_traits>
 #include <utility>
 
 #include "arch.hpp"
+#include "constants.hpp"
 #include "single_core.hpp"
 #include "single_core_util.hpp"
 #include "trap.hpp"
@@ -160,23 +160,7 @@ Trap SingleCore::AAS(void) noexcept
 
 arch::Immediate SingleCore::setFlagOnAdd(std::uint32_t aSource, std::uint32_t aDest, std::uint32_t aCarry) noexcept
 {
-    const auto myResult = aSource + aDest + aCarry;
-
-    const bool myIsCarryFlag = myResult > 0xFFFF;
-    const bool myAuxiliaryFlag = ((aSource & 0xF) + (aDest & 0xF) + aCarry) > 0xF;
-    const bool myIsOverflowFlag = ((aDest ^ myResult) & (aSource ^ myResult) & 0x8000) != 0;
-    const bool myIsSignFlag = (myResult & 0x8000) != 0;
-    const bool myIsZeroFlag = (myResult & 0xFFFF) == 0;
-    const bool myIsParityFlag = SingleCoreUtil::parity(myResult & 0xFF);
-
-    setFlag(arch::Flags::CF, myIsCarryFlag);
-    setFlag(arch::Flags::AF, myAuxiliaryFlag);
-    setFlag(arch::Flags::OF, myIsOverflowFlag);
-    setFlag(arch::Flags::SF, myIsSignFlag);
-    setFlag(arch::Flags::ZF, myIsZeroFlag);
-    setFlag(arch::Flags::PF, myIsParityFlag);
-
-    return myResult & 0xFFFF;
+    return computeArithmeticFlags<SingleCore::BinaryOp::Add>(aSource, aDest, aCarry);
 }
 
 Trap SingleCore::ADC(arch::Regs aRegister, arch::MemoryAddress aMemory) noexcept
@@ -343,6 +327,96 @@ Trap SingleCore::AND(arch::MemoryAddress aFirst, arch::Regs aSecond) noexcept
 {
     const arch::Immediate mySecond = readRegister(aSecond);
     return AND(aFirst, mySecond);
+}
+
+Trap SingleCore::CALL(arch::MemoryAddress) noexcept
+{
+    return Trap::ILLEGAL;
+}
+
+Trap SingleCore::CALL(arch::Regs) noexcept
+{
+    return Trap::ILLEGAL;
+}
+
+Trap SingleCore::CBW(void) noexcept
+{
+    const bool myIsUpperBitSet = (theAX.theRegisterValue & 0x80) != 0;
+    const auto myAH = myIsUpperBitSet ? 0xFF : 0x0;
+    theAX.theRegisterValue = (myAH << constants::CHAR_SIZE) | theAX.theRegisterValue;
+    return Trap::OK;
+}
+
+Trap SingleCore::CMP(arch::Regs aFirst, arch::Regs aSecond) noexcept
+{
+    return CMP(aFirst, readRegister(aSecond));
+}
+
+Trap SingleCore::CMP(arch::Regs aFirst, arch::MemoryAddress aSecond) noexcept
+{
+    const auto [myTrap, myMemoryValue] = theMemory.read(aSecond);
+    if (myTrap != Trap::OK)
+    {
+        return myTrap;
+    }
+    return CMP(aFirst, myMemoryValue);
+}
+
+Trap SingleCore::CMP(arch::Regs aFirst, arch::Immediate aSecond) noexcept
+{
+    setFlagOnCmp(readRegister(aFirst), aSecond);
+    return Trap::OK;
+}
+
+Trap SingleCore::CMP(arch::MemoryAddress aFirst, arch::Immediate aSecond) noexcept
+{
+    const auto [myTrap, myMemoryValue] = theMemory.read(aFirst);
+    if (myTrap != Trap::OK)
+    {
+        return myTrap;
+    }
+    setFlagOnCmp(myMemoryValue, aSecond);
+    return Trap::OK;
+}
+
+Trap SingleCore::CMP(arch::MemoryAddress aFirst, arch::Regs aSecond) noexcept
+{
+    return CMP(aFirst, static_cast<arch::Immediate>(readRegister(aSecond)));
+}
+
+template <SingleCore::BinaryOp Op>
+arch::Immediate SingleCore::computeArithmeticFlags(std::uint32_t aDest, std::uint32_t aSource,
+                                                   std::uint32_t aCarry) noexcept
+{
+    std::uint32_t myResult{};
+
+    if constexpr (Op == SingleCore::BinaryOp::Add)
+    {
+        myResult = aDest + aSource + aCarry;
+
+        setFlag(arch::Flags::CF, myResult > 0xFFFF);
+        setFlag(arch::Flags::AF, ((aDest & 0xF) + (aSource & 0xF) + aCarry) > 0xF);
+        setFlag(arch::Flags::OF, ((aDest ^ myResult) & (aSource ^ myResult) & 0x8000) != 0);
+    }
+    else if constexpr (Op == SingleCore::BinaryOp::Sub)
+    {
+        myResult = aDest - (aSource + aCarry);
+        setFlag(arch::Flags::CF, aDest < (aSource + aCarry));
+        setFlag(arch::Flags::AF, ((aDest ^ aSource ^ myResult) & 0x10) != 0);
+        setFlag(arch::Flags::OF, ((aDest ^ aSource) & (aDest ^ myResult) & 0x8000) != 0);
+    }
+
+    myResult &= 0xFFFF;
+    setFlag(arch::Flags::SF, (myResult & 0x8000) != 0);
+    setFlag(arch::Flags::ZF, myResult == 0);
+    setFlag(arch::Flags::PF, SingleCoreUtil::parity(myResult & 0xFF));
+
+    return myResult;
+}
+
+arch::Immediate SingleCore::setFlagOnCmp(std::uint32_t aFirst, std::uint32_t aSecond) noexcept
+{
+    return computeArithmeticFlags<SingleCore::BinaryOp::Sub>(aFirst, aSecond, 0);
 }
 
 } // namespace svm

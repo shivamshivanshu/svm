@@ -18,6 +18,12 @@ struct SingleCore
 
     SingleCore(RandomAccessMemory &aMemory);
 
+    enum class BinaryOp
+    {
+        Add,
+        Sub,
+    };
+
     // Instruction set
     Trap AAA(void) noexcept;
     Trap AAD(void) noexcept;
@@ -262,9 +268,12 @@ struct SingleCore
     void setFlag(arch::Flags, arch::Immediate) noexcept;
     arch::Immediate readFlag(arch::Flags) noexcept;
     arch::MemoryAddress getEffectiveAddr(arch::Regs, arch::Regs) const noexcept;
-    arch::Immediate setFlagOnAdd(std::uint32_t, std::uint32_t, std::uint32_t) noexcept;
 
   private:
+    template<BinaryOp Op>
+    arch::Immediate computeArithmeticFlags(std::uint32_t, std::uint32_t, std::uint32_t) noexcept;
+    arch::Immediate setFlagOnAdd(std::uint32_t, std::uint32_t, std::uint32_t) noexcept;
+    arch::Immediate setFlagOnCmp(std::uint32_t, std::uint32_t) noexcept;
     // General Purpose Registers
     arch::Register theAX{arch::Register{.theLabel = arch::Regs::AX, .theRegisterValue = 0}};
     arch::Register theBX{arch::Register{.theLabel = arch::Regs::BX, .theRegisterValue = 0}};
